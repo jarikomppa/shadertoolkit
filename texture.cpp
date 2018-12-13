@@ -7,6 +7,8 @@
 #include "/libraries/glm/glm/gtx/transform.hpp"
 #include "/libraries/glm/glm/gtx/rotate_vector.hpp"
 #include "/libraries/glm/glm/gtc/type_ptr.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
 
 #define ST_SHADER_H_IMPLEMENTATION
 #include "st_shader.h"
@@ -16,6 +18,9 @@
 
 #define ST_GENERATE_CUBE_H_IMPLEMENTATION
 #include "st_generate_cube.h"
+
+#define ST_TEXTURE_H_IMPLEMENTATION
+#include "st_texture.h"
 
 using namespace st;
 
@@ -149,39 +154,38 @@ void process_events()
 
 Vertexbuffer *cube;
 Shader flat;
+GLuint tex;
 
 void init()
 {
+	tex = loadtexture("texture.png");
 	cube = generate_cube(50, 20, 30);
 	flat.loadmem((char*)
 	"#version 330\n"
 	"#extension GL_ARB_explicit_uniform_location : enable\n"
 	"\n"
 	"layout(location = 1) in vec4 vertexposition;\n"
+	"layout(location = 3) in vec2 texcoord;\n"
 	"\n"
 	"uniform mat4 mvp;\n"
-	"uniform vec4 incolor;\n"
-	"\n"
-	"out vec4 color;\n"
-	"out vec4 coord;\n"
+	"out vec2 uv;\n"
 	"\n"
 	"void main()\n"
 	"{\n"
 	"	gl_Position = mvp * vertexposition;\n"
-	"	color = incolor;\n"
-	"	coord = normalize(vertexposition);\n"
+	"	uv = texcoord;\n"
 	"}\n",
 	(char*)
 	"#version 330\n"
 	"#extension GL_ARB_explicit_uniform_location : enable\n"
 	"\n"
-	"in vec4 coord;\n"
-	"in vec4 color;\n"
+	"uniform sampler2D tex;"
+	"in vec2 uv;\n"
 	"out vec4 fragcolor;\n"
 	"\n"
 	"void main()\n"
 	"{\n"
-	"	fragcolor = color + coord;\n"
+	"	fragcolor = texture(tex, uv.xy);\n"
 	"}\n");
 }
 
@@ -197,8 +201,9 @@ void draw_screen()
 
 	flat.enable();
 	glUniformMatrix4fv(flat.getUniformLocation("mvp"), 1, 0, glm::value_ptr(mvp));
-	glm::vec4 col = glm::vec4(sin(tick * 0.00123), sin(tick * 0.00135), sin(tick * 0.00146), 1);
-	glUniform4fv(flat.getUniformLocation("incolor"), 1, glm::value_ptr(col));
+	glUniform1i(flat.getUniformLocation("tex"), 0);
+	glActiveTexture(GL_TEXTURE0); 
+	glBindTexture(GL_TEXTURE_2D, tex); 
 
 	cube->enable();
 	cube->render();

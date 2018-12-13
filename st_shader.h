@@ -226,7 +226,7 @@ namespace st
 			i++;
 		}
 		for (i = 0; i < linecount; i++)
-			lengths[i] = strlen(lines[i]);
+			lengths[i] = (int)strlen(lines[i]);
 		glShaderSource(shaderid, linecount, (const GLchar**)lines, lengths); SHADER_H_CHECK_GL_ERROR
 		glCompileShader(shaderid); SHADER_H_CHECK_GL_ERROR
 		int res;

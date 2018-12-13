@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2050
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shadertoolkit", "shadertoolkit.vcxproj", "{9EB4DF62-229A-419C-95A1-3B223420F234}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basic", "basic.vcxproj", "{9EB4DF62-229A-419C-95A1-3B223420F234}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "texture", "texture.vcxproj", "{1F45599A-8DDC-4437-AD6E-4400B8202B55}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{9EB4DF62-229A-419C-95A1-3B223420F234}.Release|x64.Build.0 = Release|x64
 		{9EB4DF62-229A-419C-95A1-3B223420F234}.Release|x86.ActiveCfg = Release|Win32
 		{9EB4DF62-229A-419C-95A1-3B223420F234}.Release|x86.Build.0 = Release|Win32
+		{1F45599A-8DDC-4437-AD6E-4400B8202B55}.Debug|x64.ActiveCfg = Debug|x64
+		{1F45599A-8DDC-4437-AD6E-4400B8202B55}.Debug|x64.Build.0 = Debug|x64
+		{1F45599A-8DDC-4437-AD6E-4400B8202B55}.Debug|x86.ActiveCfg = Debug|Win32
+		{1F45599A-8DDC-4437-AD6E-4400B8202B55}.Debug|x86.Build.0 = Debug|Win32
+		{1F45599A-8DDC-4437-AD6E-4400B8202B55}.Release|x64.ActiveCfg = Release|x64
+		{1F45599A-8DDC-4437-AD6E-4400B8202B55}.Release|x64.Build.0 = Release|x64
+		{1F45599A-8DDC-4437-AD6E-4400B8202B55}.Release|x86.ActiveCfg = Release|Win32
+		{1F45599A-8DDC-4437-AD6E-4400B8202B55}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
