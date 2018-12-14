@@ -144,28 +144,32 @@ void process_events()
 
 //////////////////////////////////////////////////////////////////////////
 
-Vertexbuffer *cube, *plank;
+Vertexbuffer *cube, *slab;
 Shader shadowpass, renderpass;
 Shadowmap shadowmap;
 
 void init()
 {
+	int i, j, k;
 	shadowmap.init();
-	plank = generate_cube(500, 1, 500);
-	cube = generate_cube(5, 5, 5);
+	slab = generate_cube(500, 1, 500);
+	float *slabvert = slab->getAttribArrayPtr(1);
+	for (i = 0; i < slab->mVertexCount; i++)
+		slabvert[i * 3 + 1] -= 100;
+
+	cube = generate_cube(2.5, 2.5, 2.5);
 	cube->mInstanceCount = 5 * 5 * 5;
 	float * inst = cube->addAttribArray(3, 4, 1);
 
-	int i, j, k;
 	for (i = 0; i < 5; i++)
 	{
 		for (j = 0; j < 5; j++)
 		{
 			for (k = 0; k < 5; k++)
 			{
-				inst[(k + j * 5 + i * 5 * 5) * 3 + 0] = (i - 2) * 25.0f;
-				inst[(k + j * 5 + i * 5 * 5) * 3 + 1] = (j - 2) * 25.0f;
-				inst[(k + j * 5 + i * 5 * 5) * 3 + 2] = (k - 2) * 25.0f;
+				inst[(k + j * 5 + i * 5 * 5) * 3 + 0] = (i - 2) * 15.0f;
+				inst[(k + j * 5 + i * 5 * 5) * 3 + 1] = (j - 2) * 15.0f;
+				inst[(k + j * 5 + i * 5 * 5) * 3 + 2] = (k - 2) * 15.0f;
 			}
 		}
 	}
@@ -181,7 +185,7 @@ void init()
 		"\n"
 		"void main()\n"
 		"{\n"
-		"	gl_Position = mvp * (vertexposition + instanceposition) - vec4(0,0,-0.005,0);\n"
+		"	gl_Position = mvp * (vertexposition + vec4(instanceposition.xyz,0)) - vec4(0,0,-0.005,0);\n"
 		"}\n",
 		(char*)
 		"#version 330\n"
@@ -208,8 +212,8 @@ void init()
 		"\n"
 		"void main()\n"
 		"{\n"
-		"	gl_Position = mvp * (vertexposition + instanceposition);\n"
-		"   coord = mv * (vertexposition + instanceposition);\n"
+		"	gl_Position = mvp * (vertexposition + vec4(instanceposition.xyz,0));\n"
+		"   coord = mv * (vertexposition + vec4(instanceposition.xyz,0));\n"
 		"}\n",
 		(char*)
 		"#version 330\n"
@@ -220,16 +224,16 @@ void init()
 		"in vec4 coord;\n"
 		"out vec4 fragcolor;\n"
 		"\n"
-		"float getshadowsample(vec4 coord)\n"
+		"float getshadowsample(vec4 scoord)\n"
 		"{\n"
-		"	float shadowdepth = texture(shadowmap, coord.xy).r;\n"
+		"	float shadowdepth = texture(shadowmap, scoord.xy).r;\n"
 		"\n"
-		"	if (shadowdepth < coord.z ||\n"
-		"		coord.w < 0.0 ||\n"
-		"		coord.x < 0.0 ||\n"
-		"		coord.y < 0.0 ||\n"
-		"		coord.x > 1.0 ||\n"
-		"		coord.y > 1.0)\n"
+		"	if (shadowdepth < scoord.z ||\n"
+		"		scoord.w < 0.0 ||\n"
+		"		scoord.x < 0.0 ||\n"
+		"		scoord.y < 0.0 ||\n"
+		"		scoord.x > 1.0 ||\n"
+		"		scoord.y > 1.0)\n"
 		"	{\n"
 		"		return 0.5;\n"
 		"	}\n"
@@ -244,10 +248,11 @@ void init()
 		"}\n");
 }
 
-//#define SHADOWPASS_DEBUG
+#define SHADOWPASS_DEBUG
 
 void draw_screen()
 {
+	int tick = SDL_GetTicks();
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
@@ -260,10 +265,10 @@ void draw_screen()
 #endif
 	
 	shadowmap.shadowmatrix_proj(
-		glm::vec3(100.0f, 100.0f, 100.0f), 
+		glm::vec3(10, 100.0f, 10),
 		glm::vec3(0.0f, 0.0f, 0.0f), 
 		glm::vec3(0.0f, 1.0f, 0.0f), 
-		90 * 3.14f / 360.0f, 100.0f, 400.0f);
+		90 * 3.14f / 360.0f, 50.0f, 1000.0f);
 	/*
 	shadowmap.shadowmatrix_ortho(
 		glm::vec3(100.0f, 100.0f, 100.0f),
@@ -278,9 +283,9 @@ void draw_screen()
 	cube->render();
 	cube->disable();
 
-	plank->enable();
-	plank->render();
-	plank->disable();
+	slab->enable();
+	slab->render();
+	slab->disable();
 
 	shadowpass.disable();
 #ifndef SHADOWPASS_DEBUG
@@ -295,7 +300,6 @@ void draw_screen()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glCullFace(GL_BACK);
 
-	int tick = SDL_GetTicks();
 	glm::mat4 lookat = glm::lookAt(glm::vec3(sin(tick * 0.000345)*100.0f, 50, cos(tick * 0.000345)*100.0f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	glm::mat4 proj = glm::perspective(90 * 3.14f / 360.0f, gScreenWidth / (float)gScreenHeight, 10.0f, 1000.0f);
 	glm::mat4 mvp = proj * lookat;
@@ -312,9 +316,9 @@ void draw_screen()
 	cube->render();
 	cube->disable();
 
-	plank->enable();
-	plank->render();
-	plank->disable();
+	slab->enable();
+	slab->render();
+	slab->disable();
 
 	renderpass.disable();
 	SDL_Delay(1);
