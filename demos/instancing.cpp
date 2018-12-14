@@ -185,7 +185,7 @@ void init()
 	"\n"
 	"void main()\n"
 	"{\n"
-	"	gl_Position = mvp * (vertexposition + instanceposition);\n"
+	"	gl_Position = mvp * (vertexposition + vec4(instanceposition.xyz,0));\n"
 	"	color = incolor;\n"
 	"	coord = normalize(vertexposition);\n"
 	"}\n",
@@ -211,7 +211,7 @@ void draw_screen()
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	int tick = SDL_GetTicks();
-	glm::mat4 lookat = glm::lookAt(glm::vec3(sin(tick * 0.000345)*100.0f, 50, cos(tick * 0.000345)*100.0f), glm::vec3(0, -10, 0), glm::vec3(0, 1, 0));
+	glm::mat4 lookat = glm::lookAt(glm::vec3(sin(tick * 0.000345)*200.0f, 50, cos(tick * 0.000345)*200.0f), glm::vec3(0, -10, 0), glm::vec3(0, 1, 0));
 	glm::mat4 proj = glm::perspective(90 * 3.14f / 360.0f, gScreenWidth / (float)gScreenHeight, 1.0f, 1000.0f);
 	glm::mat4 mvp = proj * lookat;
 
