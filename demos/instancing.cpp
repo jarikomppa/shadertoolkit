@@ -9,13 +9,13 @@
 #include "/libraries/glm/glm/gtc/type_ptr.hpp"
 
 #define ST_SHADER_H_IMPLEMENTATION
-#include "st_shader.h"
+#include "../st_shader.h"
 
 #define ST_VERTEXBUFFER_H_IMPLEMENTATION
-#include "st_vertexbuffer.h"
+#include "../st_vertexbuffer.h"
 
 #define ST_GENERATE_CUBE_H_IMPLEMENTATION
-#include "st_generate_cube.h"
+#include "../st_generate_cube.h"
 
 using namespace st;
 

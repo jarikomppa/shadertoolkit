@@ -7,3 +7,6 @@ These single-header libs help with that.
 
 The demos require glm and sdl2. The headers themselves don't really care,
 although there may be some win32 stuff there (which is not exactly essential).
+
+The headers are largely independent, so if all you need is a shader loader,
+just grab that.

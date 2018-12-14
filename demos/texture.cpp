@@ -8,19 +8,19 @@
 #include "/libraries/glm/glm/gtx/rotate_vector.hpp"
 #include "/libraries/glm/glm/gtc/type_ptr.hpp"
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
+#include "../stb/stb_image.h"
 
 #define ST_SHADER_H_IMPLEMENTATION
-#include "st_shader.h"
+#include "../st_shader.h"
 
 #define ST_VERTEXBUFFER_H_IMPLEMENTATION
-#include "st_vertexbuffer.h"
+#include "../st_vertexbuffer.h"
 
 #define ST_GENERATE_CUBE_H_IMPLEMENTATION
-#include "st_generate_cube.h"
+#include "../st_generate_cube.h"
 
 #define ST_TEXTURE_H_IMPLEMENTATION
-#include "st_texture.h"
+#include "../st_texture.h"
 
 using namespace st;
 
