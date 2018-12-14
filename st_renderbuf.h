@@ -111,17 +111,25 @@ namespace st
 	Renderbuf::~Renderbuf()
 	{
 		if (mRenderTex)
-			glDeleteTextures(1, &mRenderTex);
+		{
+			glDeleteTextures(1, &mRenderTex); RENDERBUF_H_CHECK_GL_ERROR
+		}
 		if (mRenderFBO)
-			glDeleteFramebuffers(1, &mRenderFBO);
+		{
+			glDeleteFramebuffers(1, &mRenderFBO); RENDERBUF_H_CHECK_GL_ERROR
+		}
 		if (mRenderRB)
-			glDeleteRenderbuffers(1, &mRenderRB);
+		{
+			glDeleteRenderbuffers(1, &mRenderRB); RENDERBUF_H_CHECK_GL_ERROR
+		}
 	}
 
 	void Renderbuf::init(int aRenderTextureDimension)
 	{
 		mRenderTextureDimension = aRenderTextureDimension;
 
+		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &mPrevFB); RENDERBUF_H_CHECK_GL_ERROR
+			
 		glActiveTexture(GL_TEXTURE0); RENDERBUF_H_CHECK_GL_ERROR
 		glGenTextures(1, &mRenderTex); RENDERBUF_H_CHECK_GL_ERROR
 		glBindTexture(GL_TEXTURE_2D, mRenderTex); RENDERBUF_H_CHECK_GL_ERROR
@@ -138,22 +146,21 @@ namespace st
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mRenderTex, 0); RENDERBUF_H_CHECK_GL_ERROR
 
-		glGenRenderbuffers(1, &mRenderRB);
-		glBindRenderbuffer(GL_RENDERBUFFER, mRenderRB);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, aRenderTextureDimension, aRenderTextureDimension);
+		glGenRenderbuffers(1, &mRenderRB); RENDERBUF_H_CHECK_GL_ERROR
+		glBindRenderbuffer(GL_RENDERBUFFER, mRenderRB); RENDERBUF_H_CHECK_GL_ERROR
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, aRenderTextureDimension, aRenderTextureDimension); RENDERBUF_H_CHECK_GL_ERROR
 
-		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER); RENDERBUF_H_CHECK_GL_ERROR
 		
 		// .. do something with the status maybe?
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); RENDERBUF_H_CHECK_GL_ERROR
-		glActiveTexture(GL_TEXTURE0); RENDERBUF_H_CHECK_GL_ERROR
+		glBindFramebuffer(GL_FRAMEBUFFER, mPrevFB); RENDERBUF_H_CHECK_GL_ERROR
 	}
 
 	void Renderbuf::enable()
 	{
-		glGetIntegerv(GL_VIEWPORT, &mPrevViewport[0]);
-		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &mPrevFB);
+		glGetIntegerv(GL_VIEWPORT, &mPrevViewport[0]); RENDERBUF_H_CHECK_GL_ERROR
+		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &mPrevFB); RENDERBUF_H_CHECK_GL_ERROR
 		glBindFramebuffer(GL_FRAMEBUFFER, mRenderFBO); RENDERBUF_H_CHECK_GL_ERROR
 		glViewport(0, 0, mRenderTextureDimension, mRenderTextureDimension); RENDERBUF_H_CHECK_GL_ERROR
 	}

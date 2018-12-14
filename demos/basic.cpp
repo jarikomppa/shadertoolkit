@@ -193,7 +193,7 @@ void draw_screen()
 	glEnable(GL_CULL_FACE);
 	int tick = SDL_GetTicks();
 	glm::mat4 lookat = glm::lookAt(glm::vec3(sin(tick * 0.000345)*100.0f, 30, cos(tick * 0.000345)*100.0f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	glm::mat4 proj = glm::perspective(45.0f, gScreenWidth / (float)gScreenHeight, 1.0f, 1000.0f);
+	glm::mat4 proj = glm::perspective(90 * 3.14f / 360.0f, gScreenWidth / (float)gScreenHeight, 1.0f, 1000.0f);
 	glm::mat4 mvp = proj * lookat;
 
 	flat.enable();

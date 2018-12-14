@@ -108,12 +108,24 @@ namespace st
 	int Shader::getUniformLocation(const char * aName)
 	{
 		int v = glGetUniformLocation(mProgram, aName); SHADER_H_CHECK_GL_ERROR
+		if (v < 0)
+		{
+			char tmp[256];
+			sprintf_s(tmp, 256, "%s::%d:%s", __FILE__, __LINE__, aName);
+			MessageBoxA(NULL, "Bad uniform name", tmp, MB_OK);
+		}
 		return v;
 	}
 
 	int Shader::getAttributeLocation(const char * aName)
 	{
 		int ret = glGetAttribLocation(mProgram, aName); SHADER_H_CHECK_GL_ERROR
+		if (ret < 0)
+		{
+			char tmp[256];
+			sprintf_s(tmp, 256, "%s::%d:%s", __FILE__, __LINE__, aName);
+			MessageBoxA(NULL, "Bad attribute name", tmp, MB_OK);
+		}
 		return ret;
 	}
 
