@@ -250,7 +250,7 @@ namespace st
 			glEnableVertexAttribArray(walker->mIndex); VERTEXBUFFER_H_CHECK_GL_ERROR
 			glBindBuffer(GL_ARRAY_BUFFER, walker->mVBOHandle); VERTEXBUFFER_H_CHECK_GL_ERROR
 			glVertexAttribPointer(walker->mIndex, walker->mElements, GL_FLOAT, 0, 0, 0); VERTEXBUFFER_H_CHECK_GL_ERROR
-			//glVertexAttribDivisor(walker->mIndex, walker->mDivisor); VERTEXBUFFER_H_CHECK_GL_ERROR
+			glVertexAttribDivisor(walker->mIndex, walker->mDivisor); VERTEXBUFFER_H_CHECK_GL_ERROR
 			walker = walker->mNext;
 		}
 	}
