@@ -1,20 +1,27 @@
 // by Jari Komppa 2018
 // Under unlicense. Google it.
 // Use ST_SHADER_H_IMPLEMENTATION in one source file before including this.
+// (Or if you're using a bunch of ST_ headers and want to implement all, just use ST_H_IMPLEMENTATION)
 // Needs opengl headers before it, naturally.
+
+// This is a mesh generator, and depends on st_vertexbuffer.h
 
 #ifndef ST_GENERATE_CUBE_H
 #define ST_GENERATE_CUBE_H
 
-#undef ST_VERTEXBUFFER_H_IMPLEMENTATION
+#if !defined(ST_VERTEXBUFFER_H) 
+#if defined(ST_H_IMPLEMENTATION)
+#error "st_vertexbuffer.h needs to be included before generators"
+#endif
 #include "st_vertexbuffer.h"
+#endif
 
 namespace st
 {
 	Vertexbuffer *generate_cube(float w, float h, float l);
 }
 
-#ifdef ST_GENERATE_CUBE_H_IMPLEMENTATION
+#if defined(ST_GENERATE_CUBE_H_IMPLEMENTATION) || defined(ST_H_IMPLEMENTATION)
 
 namespace st
 {

@@ -1,6 +1,7 @@
 // by Jari Komppa 2018
 // Under unlicense. Google it.
 // Use ST_SHADER_H_IMPLEMENTATION in one source file before including this.
+// (Or if you're using a bunch of ST_ headers and want to implement all, just use ST_H_IMPLEMENTATION)
 // Needs opengl headers before it, naturally.
 
 #ifndef ST_SHADER_H
@@ -27,9 +28,9 @@ namespace st
 		void loadshadermem(int shaderid, char *membuf, char *name);
 		void check_gl_error(const char * fn, int l);
 	};
-
 }
-#ifdef ST_SHADER_H_IMPLEMENTATION
+
+#if defined(ST_SHADER_H_IMPLEMENTATION) || defined(ST_H_IMPLEMENTATION)
 
 namespace st
 {

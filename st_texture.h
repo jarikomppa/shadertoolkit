@@ -1,7 +1,11 @@
 // by Jari Komppa 2018
 // Under unlicense. Google it.
 // Use ST_TEXTURE_H_IMPLEMENTATION in one source file before including this.
+// (Or if you're using a bunch of ST_ headers and want to implement all, just use ST_H_IMPLEMENTATION)
 // Needs opengl headers before it, naturally.
+
+// This is a texture file loader, and depends on stb_image.h
+// You will need to include the implementation of stb_image.h somewhere. See stb_image.h.
 
 #ifndef ST_TEXTURE_H
 #define ST_TEXTURE_H
@@ -11,10 +15,11 @@ namespace st
 	GLuint loadtexture(const char *aFilename, bool aWrap = true, bool aMipmaps = true);
 }
 
-#ifdef ST_TEXTURE_H_IMPLEMENTATION
+#if defined(ST_TEXTURE_H_IMPLEMENTATION) || defined(ST_H_IMPLEMENTATION)
 
-#undef STB_IMAGE_IMPLEMENTATION
+#ifndef STBI_INCLUDE_STB_IMAGE_H
 #include "stb/stb_image.h"
+#endif
 
 namespace st
 {
