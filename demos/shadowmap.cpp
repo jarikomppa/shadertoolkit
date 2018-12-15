@@ -152,10 +152,10 @@ void init()
 {
 	int i, j, k;
 	shadowmap.init();
-	slab = generate_cube(500, 1, 500);
+	slab = generate_cube(500, 5, 500);
 	float *slabvert = slab->getAttribArrayPtr(1);
 	for (i = 0; i < slab->mVertexCount; i++)
-		slabvert[i * 3 + 1] -= 100;
+		slabvert[i * 3 + 1] -= 15*2.5f;
 
 	cube = generate_cube(2.5, 2.5, 2.5);
 	cube->mInstanceCount = 5 * 5 * 5;
@@ -182,10 +182,13 @@ void init()
 		"layout(location = 4) in vec4 instanceposition;\n"
 		"\n"
 		"uniform mat4 mvp;\n"
+		"uniform vec4 lightpos;\n"
 		"\n"
 		"void main()\n"
 		"{\n"
-		"	gl_Position = mvp * (vertexposition + vec4(instanceposition.xyz,0)) - vec4(0,0,-0.005,0);\n"
+		"   vec4 pos = (vertexposition + vec4(instanceposition.xyz,0));\n"
+		"   vec4 fudge = (lightpos - pos) * 0.01;\n"
+		"	gl_Position = mvp * pos + fudge;\n" // move position a bit off the surface
 		"}\n",
 		(char*)
 		"#version 330\n"
@@ -207,13 +210,13 @@ void init()
 		"layout(location = 4) in vec4 instanceposition;\n"
 		"\n"
 		"uniform mat4 mvp;\n"
-		"uniform mat4 mv;\n"
+		"uniform mat4 model;\n"
 		"out vec4 coord;\n"
 		"\n"
 		"void main()\n"
 		"{\n"
 		"	gl_Position = mvp * (vertexposition + vec4(instanceposition.xyz,0));\n"
-		"   coord = mv * (vertexposition + vec4(instanceposition.xyz,0));\n"
+		"   coord = model * (vertexposition + vec4(instanceposition.xyz,0));\n"
 		"}\n",
 		(char*)
 		"#version 330\n"
@@ -228,27 +231,30 @@ void init()
 		"{\n"
 		"	float shadowdepth = texture(shadowmap, scoord.xy).r;\n"
 		"\n"
-		"	if (shadowdepth < scoord.z ||\n"
-		"		scoord.w < 0.0 ||\n"
+		"	if (scoord.w < 0.0 ||\n"
 		"		scoord.x < 0.0 ||\n"
 		"		scoord.y < 0.0 ||\n"
 		"		scoord.x > 1.0 ||\n"
 		"		scoord.y > 1.0)\n"
 		"	{\n"
-		"		return 0.5;\n"
+		"		return 1.0;\n" // what to do if outside the shadow map area (depends on application)
 		"	}\n"
-		"	return 1.0;\n"
+		"	if (shadowdepth < scoord.z)\n"
+		"	{\n"
+		"		return 0.5;\n" // what to do if in shadow
+		"	}\n"
+		"	return 1.0;\n" // what to do in light
 		"}\n"
 		"\n"
 		"void main()\n"
 		"{\n"
 		"	vec4 shadowcoord = shadowmatrix * coord;\n"
 		"   shadowcoord /= shadowcoord.w;\n"
-		"	fragcolor = vec4(vec3(getshadowsample(shadowcoord)),1.0);\n"
+		"	fragcolor = vec4((normalize(coord.xyz) + vec3(0.5))*vec3(getshadowsample(shadowcoord)),1.0);\n"
 		"}\n");
 }
 
-#define SHADOWPASS_DEBUG
+//#define SHADOWPASS_DEBUG
 
 void draw_screen()
 {
@@ -265,7 +271,7 @@ void draw_screen()
 #endif
 	
 	shadowmap.shadowmatrix_proj(
-		glm::vec3(10, 100.0f, 10),
+		glm::vec3(sin(tick * 0.001)*100, 100.0f, cos(tick * 0.0011) * 100),
 		glm::vec3(0.0f, 0.0f, 0.0f), 
 		glm::vec3(0.0f, 1.0f, 0.0f), 
 		90 * 3.14f / 360.0f, 50.0f, 1000.0f);
@@ -276,9 +282,10 @@ void draw_screen()
 		glm::vec3(0.0f, 1.0f, 0.0f),
 		-50,50,-50,50, 100.0f, 200.0f);
 		*/
+	
 	shadowpass.enable();
 	glUniformMatrix4fv(shadowpass.getUniformLocation("mvp"), 1, 0, glm::value_ptr(shadowmap.mMVP));
-
+	glUniform4fv(shadowpass.getUniformLocation("lightpos"), 1, glm::value_ptr(shadowmap.mLightpos));
 	cube->enable();
 	cube->render();
 	cube->disable();
@@ -303,10 +310,10 @@ void draw_screen()
 	glm::mat4 lookat = glm::lookAt(glm::vec3(sin(tick * 0.000345)*100.0f, 50, cos(tick * 0.000345)*100.0f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	glm::mat4 proj = glm::perspective(90 * 3.14f / 360.0f, gScreenWidth / (float)gScreenHeight, 10.0f, 1000.0f);
 	glm::mat4 mvp = proj * lookat;
-
+	glm::mat4 model;
 	renderpass.enable();
 	glUniformMatrix4fv(renderpass.getUniformLocation("mvp"), 1, 0, glm::value_ptr(mvp));
-	glUniformMatrix4fv(renderpass.getUniformLocation("mv"), 1, 0, glm::value_ptr(lookat));
+	glUniformMatrix4fv(renderpass.getUniformLocation("model"), 1, 0, glm::value_ptr(model));
 	glUniformMatrix4fv(renderpass.getUniformLocation("shadowmatrix"), 1, 0, glm::value_ptr(shadowmap.mShadowmatrix));
 	glUniform1i(renderpass.getUniformLocation("shadowmap"), 0);
 	glActiveTexture(GL_TEXTURE0);
