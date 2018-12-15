@@ -8,14 +8,11 @@
 #include "/libraries/glm/glm/gtx/rotate_vector.hpp"
 #include "/libraries/glm/glm/gtc/type_ptr.hpp"
 
-#define ST_SHADER_H_IMPLEMENTATION
+#define ST_H_IMPLEMENTATION
 #include "../st_shader.h"
-
-#define ST_VERTEXBUFFER_H_IMPLEMENTATION
 #include "../st_vertexbuffer.h"
-
-#define ST_GENERATE_CUBE_H_IMPLEMENTATION
 #include "../st_generate_cube.h"
+#include "../st_generate_sphere.h"
 
 using namespace st;
 
@@ -148,11 +145,14 @@ void process_events()
 //////////////////////////////////////////////////////////////////////////
 
 Vertexbuffer *cube;
+Vertexbuffer *sphere;
 Shader flat;
 
 void init()
 {
-	cube = generate_cube(50, 20, 30);
+	sphere = generate_sphere(20, 4);
+	cube = generate_cube(50, 2, 30);
+
 	flat.loadmem((char*)
 	"#version 330\n"
 	"#extension GL_ARB_explicit_uniform_location : enable\n"
@@ -189,12 +189,15 @@ void init()
 void draw_screen()
 {
 	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 	int tick = SDL_GetTicks();
 	glm::mat4 lookat = glm::lookAt(glm::vec3(sin(tick * 0.000345)*100.0f, 30, cos(tick * 0.000345)*100.0f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	glm::mat4 proj = glm::perspective(90 * 3.14f / 360.0f, gScreenWidth / (float)gScreenHeight, 1.0f, 1000.0f);
-	glm::mat4 mvp = proj * lookat;
+	glm::mat4 translate_cube = glm::translate(glm::vec3(0, -20, 0));
+	glm::mat4 translate_sphere = glm::translate(glm::vec3(0, abs(sin(tick * 0.005))*10, 0));
+	glm::mat4 mvp = proj * translate_cube * lookat;
 
 	flat.enable();
 	glUniformMatrix4fv(flat.getUniformLocation("mvp"), 1, 0, glm::value_ptr(mvp));
@@ -204,6 +207,13 @@ void draw_screen()
 	cube->enable();
 	cube->render();
 	cube->disable();
+
+	mvp = proj * translate_sphere * lookat;
+	glUniformMatrix4fv(flat.getUniformLocation("mvp"), 1, 0, glm::value_ptr(mvp));
+
+	sphere->enable();
+	sphere->render();
+	sphere->disable();
 	flat.disable();
 	SDL_Delay(1);
 	SDL_GL_SwapWindow(gSDLWindow);

@@ -1,6 +1,6 @@
 // by Jari Komppa 2018
 // Under unlicense. Google it.
-// Use ST_SHADER_H_IMPLEMENTATION in one source file before including this.
+// Use ST_GENERATE_CUBE_H_IMPLEMENTATION in one source file before including this.
 // (Or if you're using a bunch of ST_ headers and want to implement all, just use ST_H_IMPLEMENTATION)
 // Needs opengl headers before it, naturally.
 
