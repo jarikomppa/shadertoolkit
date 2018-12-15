@@ -13,6 +13,7 @@
 #include "../st_vertexbuffer.h"
 #include "../st_generate_cube.h"
 #include "../st_generate_sphere.h"
+#include "../st_generate_torusknot.h"
 
 using namespace st;
 
@@ -146,12 +147,14 @@ void process_events()
 
 Vertexbuffer *cube;
 Vertexbuffer *sphere;
+Vertexbuffer *torusknot;
 Shader flat;
 
 void init()
 {
 	sphere = generate_sphere(20, 4);
 	cube = generate_cube(50, 2, 30);
+	torusknot = generate_torusknot(128, 7, 30, 0.05, 0, 0, 0, 1, 1, 2, 3);
 
 	flat.loadmem((char*)
 	"#version 330\n"
@@ -197,6 +200,7 @@ void draw_screen()
 	glm::mat4 proj = glm::perspective(90 * 3.14f / 360.0f, gScreenWidth / (float)gScreenHeight, 1.0f, 1000.0f);
 	glm::mat4 translate_cube = glm::translate(glm::vec3(0, -20, 0));
 	glm::mat4 translate_sphere = glm::translate(glm::vec3(0, abs(sin(tick * 0.005))*10, 0));
+	glm::mat4 translate_torusknot = glm::rotate(tick * 0.001f, glm::vec3(0, 1, 0));
 	glm::mat4 mvp = proj * translate_cube * lookat;
 
 	flat.enable();
@@ -214,6 +218,14 @@ void draw_screen()
 	sphere->enable();
 	sphere->render();
 	sphere->disable();
+
+	mvp = proj  * lookat * translate_torusknot;
+	glUniformMatrix4fv(flat.getUniformLocation("mvp"), 1, 0, glm::value_ptr(mvp));
+
+	torusknot->enable();
+	torusknot->render();
+	torusknot->disable();
+
 	flat.disable();
 	SDL_Delay(1);
 	SDL_GL_SwapWindow(gSDLWindow);
