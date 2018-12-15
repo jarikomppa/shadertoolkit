@@ -151,7 +151,7 @@ Shadowmap shadowmap;
 void init()
 {
 	int i, j, k;
-	shadowmap.init();
+	shadowmap.init(4096);
 	slab = generate_cube(500, 5, 500);
 	float *slabvert = slab->getAttribArrayPtr(1);
 	for (i = 0; i < slab->mVertexCount; i++)
@@ -187,8 +187,8 @@ void init()
 		"void main()\n"
 		"{\n"
 		"   vec4 pos = (vertexposition + vec4(instanceposition.xyz,0));\n"
-		"   vec4 fudge = (lightpos - pos) * 0.01;\n"
-		"	gl_Position = mvp * pos + fudge;\n" // move position a bit off the surface
+		"   vec4 fudge = vec4(normalize(pos.xyz - lightpos.xyz) * 0.05,0);\n"
+		"	gl_Position = mvp * pos - fudge;\n" // move position a bit off the surface
 		"}\n",
 		(char*)
 		"#version 330\n"
@@ -201,7 +201,7 @@ void init()
 		"	fragcolor = vec4(vec3(gl_FragCoord.z),1);\n"
 		"}\n");
 
-
+#define FILTER_SHADOW
 	renderpass.loadmem((char*)
 		"#version 330\n"
 		"#extension GL_ARB_explicit_uniform_location : enable\n"
@@ -218,6 +218,68 @@ void init()
 		"	gl_Position = mvp * (vertexposition + vec4(instanceposition.xyz,0));\n"
 		"   coord = model * (vertexposition + vec4(instanceposition.xyz,0));\n"
 		"}\n",
+#ifdef FILTER_SHADOW
+		(char*)
+		"#version 330\n"
+		"#extension GL_ARB_explicit_uniform_location : enable\n"
+		"\n"
+		"uniform sampler2D shadowmap;\n"
+		"uniform mat4 shadowmatrix;\n"
+		"in vec4 coord;\n"
+		"out vec4 fragcolor;\n"
+		"\n"
+		"float getshadowsample(vec4 scoord)\n"
+		"{\n"
+		"	float shadowdepth = texture(shadowmap, scoord.xy).r;\n"
+		"\n"
+		"	if (scoord.w < 0.0 ||\n"
+		"		scoord.x < 0.0 ||\n"
+		"		scoord.y < 0.0 ||\n"
+		"		scoord.x > 1.0 ||\n"
+		"		scoord.y > 1.0)\n"
+		"	{\n"
+		"		return 1.0;\n" // what to do if outside the shadow map area (depends on application)
+		"	}\n"
+		"	if (shadowdepth < scoord.z)\n"
+		"	{\n"
+		"		return 0.5;\n" // what to do if in shadow
+		"	}\n"
+		"	return 1.0;\n" // what to do in light
+		"}\n"
+		"\n"
+		"vec2 poissonDisk[16] = vec2[](\n"
+		"	vec2(-0.94201624, -0.39906216),\n"
+		"	vec2(0.94558609, -0.76890725),\n"
+		"	vec2(-0.094184101, -0.92938870),\n"
+		"	vec2(0.34495938, 0.29387760),\n"
+		"	vec2(-0.91588581, 0.45771432),\n"
+		"	vec2(-0.81544232, -0.87912464),\n"
+		"	vec2(-0.38277543, 0.27676845),\n"
+		"	vec2(0.97484398, 0.75648379),\n"
+		"	vec2(0.44323325, -0.97511554),\n"
+		"	vec2(0.53742981, -0.47373420),\n"
+		"	vec2(-0.26496911, -0.41893023),\n"
+		"	vec2(0.79197514, 0.19090188),\n"
+		"	vec2(-0.24188840, 0.99706507),\n"
+		"	vec2(-0.81409955, 0.91437590),\n"
+		"	vec2(0.19984126, 0.78641367),\n"
+		"	vec2(0.14383161, -0.14100790)\n"
+		"	);\n"
+		"\n"
+		"void main()\n"
+		"{\n"
+		"	vec4 shadowcoord = shadowmatrix * coord;\n"
+		"   shadowcoord /= shadowcoord.w;\n"
+		"   float shade = 0;\n"
+		"	for (int i = 0; i < 16; i++)\n"
+		"	{\n"
+		"		vec4 temp = shadowcoord;\n"
+		"		temp.xy += poissonDisk[i] / 400.0;\n"
+		"		shade += getshadowsample(temp);\n"
+		"	}\n"
+		"	fragcolor = vec4((normalize(coord.xyz) + vec3(0.5))*vec3(shade / 16.0),1.0);\n"
+		"}\n"
+#else
 		(char*)
 		"#version 330\n"
 		"#extension GL_ARB_explicit_uniform_location : enable\n"
@@ -251,7 +313,9 @@ void init()
 		"	vec4 shadowcoord = shadowmatrix * coord;\n"
 		"   shadowcoord /= shadowcoord.w;\n"
 		"	fragcolor = vec4((normalize(coord.xyz) + vec3(0.5))*vec3(getshadowsample(shadowcoord)),1.0);\n"
-		"}\n");
+		"}\n"
+#endif
+	);
 }
 
 //#define SHADOWPASS_DEBUG
@@ -307,7 +371,7 @@ void draw_screen()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glCullFace(GL_BACK);
 
-	glm::mat4 lookat = glm::lookAt(glm::vec3(sin(tick * 0.000345)*100.0f, 50, cos(tick * 0.000345)*100.0f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	glm::mat4 lookat = glm::lookAt(glm::vec3(sin(tick * 0.000345)*100.0f, 20, cos(tick * 0.000345)*100.0f), glm::vec3(0, -30, 0), glm::vec3(0, 1, 0));
 	glm::mat4 proj = glm::perspective(90 * 3.14f / 360.0f, gScreenWidth / (float)gScreenHeight, 10.0f, 1000.0f);
 	glm::mat4 mvp = proj * lookat;
 	glm::mat4 model;
