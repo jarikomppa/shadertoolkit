@@ -20,12 +20,12 @@ namespace st
 		int getUniformLocation(const char * aName);
 		int getAttributeLocation(const char * aName);
 		Shader();
-		void load(char * vtxshaderfilename, char * pixshaderfilename);
-		void loadmem(char * vtxshader, char * pixshader);
+		void load(const char * vtxshaderfilename, const char * pixshaderfilename);
+		void loadmem(const char * vtxshader, const char * pixshader);
 		void enable();
 		void disable();
-		void loadshader(int shaderid, char * filename);
-		void loadshadermem(int shaderid, char *membuf, char *name);
+		void loadshader(int shaderid, const char * filename);
+		void loadshadermem(int shaderid, char *membuf, const char *name);
 		void check_gl_error(const char * fn, int l);
 	};
 }
@@ -136,7 +136,7 @@ namespace st
 		mProgram = 0;
 	}
 
-	void Shader::load(char * vtxshaderfilename, char * pixshaderfilename)
+	void Shader::load(const char * vtxshaderfilename, const char * pixshaderfilename)
 	{
 		if (vtxshaderfilename)
 		{
@@ -175,17 +175,17 @@ namespace st
 		}
 	}
 
-	void Shader::loadmem(char * vtxshader, char * pixshader)
+	void Shader::loadmem(const char * vtxshader, const char * pixshader)
 	{
 		if (vtxshader)
 		{
 			mVtxshader = glCreateShader(GL_VERTEX_SHADER); SHADER_H_CHECK_GL_ERROR
-			loadshadermem(mVtxshader, vtxshader, (char*)"vtxshader"); SHADER_H_CHECK_GL_ERROR
+			loadshadermem(mVtxshader, (char*)vtxshader, (char*)"vtxshader"); SHADER_H_CHECK_GL_ERROR
 		}
 		if (pixshader)
 		{
 			mFragshader = glCreateShader(GL_FRAGMENT_SHADER); SHADER_H_CHECK_GL_ERROR
-			loadshadermem(mFragshader, pixshader, (char*)"fragshader"); SHADER_H_CHECK_GL_ERROR
+			loadshadermem(mFragshader, (char*)pixshader, (char*)"fragshader"); SHADER_H_CHECK_GL_ERROR
 		}
 		mProgram = glCreateProgram(); SHADER_H_CHECK_GL_ERROR
 		if (mFragshader)
@@ -219,7 +219,7 @@ namespace st
 		glUseProgram(0); SHADER_H_CHECK_GL_ERROR
 	}
 
-	void Shader::loadshadermem(int shaderid, char *membuf, char *name) 
+	void Shader::loadshadermem(int shaderid, char *membuf, const char *name) 
 	{
 		char * lines[1024]; // 1k lines should be enough for everybody(tm)
 		int lengths[1024];
@@ -253,7 +253,7 @@ namespace st
 		}
 	}
 
-	void Shader::loadshader(int shaderid, char * filename)
+	void Shader::loadshader(int shaderid, const char * filename)
 	{
 		int len;
 		char * buf;
