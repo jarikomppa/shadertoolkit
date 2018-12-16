@@ -17,6 +17,7 @@ namespace st
 		glm::mat4 mShadowmatrix;
 		glm::mat4 mMVP;
 		glm::mat4 mModelview;
+		glm::mat4 mProjection;
 		glm::vec4 mLightpos;
 		GLint mPrevFB;
 		GLint mPrevViewport[4];
@@ -171,6 +172,7 @@ namespace st
 
 	void Shadowmap::shadowmatrix(const glm::vec3 &aLightPos, const glm::vec3 &aLightAt, const glm::vec3 &aLightUp, const glm::mat4 &projection)
 	{
+		mProjection = projection;
 		mLightpos.x = aLightPos.x;
 		mLightpos.y = aLightPos.y;
 		mLightpos.z = aLightPos.z;
@@ -184,7 +186,7 @@ namespace st
 			0.5, 0.5, 0.5, 1.0 };
 
 		mShadowmatrix = bias;
-		mShadowmatrix *= projection;
+		mShadowmatrix *= mProjection;
 		mShadowmatrix *= mModelview;
 
 		mMVP = projection * mModelview;
