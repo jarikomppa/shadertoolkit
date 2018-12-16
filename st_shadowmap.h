@@ -6,8 +6,8 @@
 
 // This one depends on glm, since it needs to calculate them matrices.
 
-#ifndef ST_RENDERBUF_H
-#define ST_RENDERBUF_H
+#ifndef ST_SHADOWMAP_H
+#define ST_SHADOWMAP_H
 
 namespace st
 {
