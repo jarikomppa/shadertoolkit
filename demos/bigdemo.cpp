@@ -156,9 +156,11 @@ Vertexbuffer *torusknot;
 Shader tex, shadowpass, floory, knot;
 GLuint glosstex, mosaictex, thegridtex;
 Renderbuf mirror;
+Shadowmap shadowmap;
 
 void init()
 {
+	shadowmap.init();
 	mirror.init();
 	glosstex = loadtexture("assets/gloss.png");
 	mosaictex = loadtexture("assets/mosaic.png");
@@ -168,7 +170,7 @@ void init()
 	torusknot = generate_torusknot(256, 7, 20, 0.1f, 0, 0, 0, 1, 64, 3, 5);
 	tex.load("assets/tex.vs", "assets/tex.fs");
 	knot.load("assets/knot.vs", "assets/knot.fs");
-	//shadowpass.load("assets/shadowpass.vs", "assets/shadowpass.fs");
+	shadowpass.load("assets/shadowpass.vs", "assets/shadowpass.fs");
 	floory.load("assets/floory.vs", "assets/floory.fs");
 }
 
@@ -183,9 +185,33 @@ void draw_screen()
 	glm::mat4 translate_floory = glm::translate(glm::vec3(0, -1, 0));
 	glm::mat4 translate_sphere = glm::translate(glm::vec3(0, 0, 0));
 	glm::mat4 translate_torusknot = glm::translate(glm::vec3(0, 25, 0));
+	glm::mat4 sphere_mvp = proj * translate_sphere * lookat;
+	glm::mat4 torusknot_mvp = proj * translate_torusknot * lookat;
+	glm::mat4 floory_mvp = proj * translate_floory * lookat;
 
 	glm::vec4 lightpos = glm::vec4(sin(tick * 0.0007)*100.0f, sin(tick * 0.0001) * 20 + 35.0f, cos(tick * 0.00075)*100.0f, 1);
+	/////////////////////////
+	{
+		shadowmap.enable();
+		shadowpass.enable();
+		shadowmap.shadowmatrix_proj(
+			glm::vec3(lightpos.x, lightpos.y, lightpos.z),
+			glm::vec3(0, 0, 0),
+			glm::vec3(0, 1, 0),
+			(float)(90.0f * M_PI * 2.0f / 360.0f),
+			1.0f, 1000.0f);
+		glm::mat4 torusknot_mvp = shadowmap.mProjection * translate_torusknot * shadowmap.mModelview;
 
+		glUniformMatrix4fv(shadowpass.getUniformLocation("mvp"), 1, 0, glm::value_ptr(torusknot_mvp));
+
+		glCullFace(GL_BACK);
+		torusknot->enable();
+		torusknot->render();
+		torusknot->disable();
+
+		shadowpass.disable();
+		shadowmap.disable();
+	}
 	/////////////////////////
 	mirror.enable();
 	{		
@@ -218,10 +244,14 @@ void draw_screen()
 		knot.enable();
 		glUniformMatrix4fv(knot.getUniformLocation("mvp"), 1, 0, glm::value_ptr(torusknot_mvp));
 		glUniformMatrix4fv(knot.getUniformLocation("model"), 1, 0, glm::value_ptr(translate_torusknot));
+		glUniformMatrix4fv(knot.getUniformLocation("shadowmatrix"), 1, 0, glm::value_ptr(shadowmap.mShadowmatrix));
 		glUniform4fv(knot.getUniformLocation("lightpos"), 1, glm::value_ptr(lightpos));
 		glUniform1i(knot.getUniformLocation("tex"), 0);
+		glUniform1i(knot.getUniformLocation("shadowmap"), 3);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mosaictex);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, shadowmap.mShadowTex);
 		glCullFace(GL_FRONT);
 		torusknot->enable();
 		torusknot->render();
@@ -236,9 +266,6 @@ void draw_screen()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
-	glm::mat4 sphere_mvp = proj * translate_sphere * lookat;
-	glm::mat4 torusknot_mvp = proj * translate_torusknot * lookat;
-	glm::mat4 floory_mvp = proj * translate_floory * lookat;
 
 	tex.enable();
 	glUniformMatrix4fv(tex.getUniformLocation("mvp"), 1, 0, glm::value_ptr(sphere_mvp));
@@ -254,10 +281,14 @@ void draw_screen()
 	knot.enable();
 	glUniformMatrix4fv(knot.getUniformLocation("mvp"), 1, 0, glm::value_ptr(torusknot_mvp));
 	glUniformMatrix4fv(knot.getUniformLocation("model"), 1, 0, glm::value_ptr(translate_torusknot));
+	glUniformMatrix4fv(knot.getUniformLocation("shadowmatrix"), 1, 0, glm::value_ptr(shadowmap.mShadowmatrix));
 	glUniform1i(knot.getUniformLocation("tex"), 0);
+	glUniform1i(knot.getUniformLocation("shadowmap"), 3);
 	glUniform4fv(knot.getUniformLocation("lightpos"), 1, glm::value_ptr(lightpos));
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mosaictex);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, shadowmap.mShadowTex);
 	glCullFace(GL_BACK);
 	torusknot->enable();
 	torusknot->render();
@@ -267,16 +298,21 @@ void draw_screen()
 
 	floory.enable();
 	glUniformMatrix4fv(floory.getUniformLocation("mvp"), 1, 0, glm::value_ptr(floory_mvp));
+	glUniformMatrix4fv(floory.getUniformLocation("model"), 1, 0, glm::value_ptr(translate_floory));
+	glUniformMatrix4fv(floory.getUniformLocation("shadowmatrix"), 1, 0, glm::value_ptr(shadowmap.mShadowmatrix));
 	glUniform1i(floory.getUniformLocation("tex"), 0);
 	glUniform1i(floory.getUniformLocation("gloss"), 1);
 	glUniform1i(floory.getUniformLocation("mirror"), 2);
-	glUniform2f(floory.getUniformLocation("viewport"), gScreenWidth, gScreenHeight);
+	glUniform1i(floory.getUniformLocation("shadowmap"), 3);
+	glUniform2f(floory.getUniformLocation("viewport"), (float)gScreenWidth, (float)gScreenHeight);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mosaictex);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, glosstex);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, mirror.mRenderTex);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, shadowmap.mShadowTex);
 	glCullFace(GL_BACK);
 
 	cube->enable();
