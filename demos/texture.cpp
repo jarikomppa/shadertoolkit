@@ -152,7 +152,7 @@ GLuint tex;
 
 void init()
 {
-	tex = loadtexture("texture.png");
+	tex = loadtexture("assets/texture.png");
 	cube = generate_cube(50, 20, 30);
 	flat.loadmem((char*)
 	"#version 330\n"

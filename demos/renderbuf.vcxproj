@@ -27,7 +27,7 @@
     <ProjectGuid>{846ABC48-3EED-4186-AA32-1A4B34B45684}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>shadertoolkit</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
     <ProjectName>renderbuf</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

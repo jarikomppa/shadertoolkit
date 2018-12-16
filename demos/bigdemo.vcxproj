@@ -19,16 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="bigdemo.cpp" />
     <ClCompile Include="glad\src\glad.c" />
-    <ClCompile Include="shadowmap.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{3D6FE88E-463F-443B-9605-FD67084C05E4}</ProjectGuid>
+    <ProjectGuid>{FDEC8738-DE2B-4520-8E0C-544D698088A8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>shadertoolkit</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
-    <ProjectName>shadowmap</ProjectName>
+    <ProjectName>bigdemo</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
