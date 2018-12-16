@@ -184,6 +184,8 @@ void draw_screen()
 	glm::mat4 translate_sphere = glm::translate(glm::vec3(0, 0, 0));
 	glm::mat4 translate_torusknot = glm::translate(glm::vec3(0, 25, 0));
 
+	glm::vec4 lightpos = glm::vec4(sin(tick * 0.0007)*100.0f, sin(tick * 0.0001) * 20 + 35.0f, cos(tick * 0.00075)*100.0f, 1);
+
 	/////////////////////////
 	mirror.enable();
 	{		
@@ -215,6 +217,8 @@ void draw_screen()
 
 		knot.enable();
 		glUniformMatrix4fv(knot.getUniformLocation("mvp"), 1, 0, glm::value_ptr(torusknot_mvp));
+		glUniformMatrix4fv(knot.getUniformLocation("model"), 1, 0, glm::value_ptr(translate_torusknot));
+		glUniform4fv(knot.getUniformLocation("lightpos"), 1, glm::value_ptr(lightpos));
 		glUniform1i(knot.getUniformLocation("tex"), 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, mosaictex);
@@ -245,9 +249,13 @@ void draw_screen()
 	sphere->enable();
 	sphere->render();
 	sphere->disable();
+	tex.disable();
 
-	glUniformMatrix4fv(tex.getUniformLocation("mvp"), 1, 0, glm::value_ptr(torusknot_mvp));
-	glUniform1i(tex.getUniformLocation("tex"), 0);
+	knot.enable();
+	glUniformMatrix4fv(knot.getUniformLocation("mvp"), 1, 0, glm::value_ptr(torusknot_mvp));
+	glUniformMatrix4fv(knot.getUniformLocation("model"), 1, 0, glm::value_ptr(translate_torusknot));
+	glUniform1i(knot.getUniformLocation("tex"), 0);
+	glUniform4fv(knot.getUniformLocation("lightpos"), 1, glm::value_ptr(lightpos));
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mosaictex);
 	glCullFace(GL_BACK);
@@ -255,7 +263,7 @@ void draw_screen()
 	torusknot->render();
 	torusknot->disable();
 
-	tex.disable();
+	knot.disable();
 
 	floory.enable();
 	glUniformMatrix4fv(floory.getUniformLocation("mvp"), 1, 0, glm::value_ptr(floory_mvp));
