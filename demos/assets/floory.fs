@@ -63,7 +63,7 @@ void main()
 	}
 	shade /= 16;
 
-	vec2 reflectionuv = vec2(gl_FragCoord.x / viewport.x, 1-gl_FragCoord.y / viewport.y);
+	vec2 reflectionuv = vec2(gl_FragCoord.x / viewport.x, gl_FragCoord.y / viewport.y);
     vec4 surface = texture(tex, uv.xy);
     vec4 glossness = texture(gloss, uv.xy);
     vec4 reflection = vec4(0);

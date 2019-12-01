@@ -16,9 +16,9 @@ namespace st
 		GLuint mRenderFBO, mRenderRB, mRenderTex;
 		GLint mPrevFB;
 		GLint mPrevViewport[4];
-		int mRenderTextureDimension;
+		int mRenderTextureDimensionX, mRenderTextureDimensionY;
 
-		void init(int aRenderTextureDimension = 1024);
+		void init(int aRenderTextureDimensionX = 1024, int aRenderTextureDimensionY = -1);
 		void enable();
 		void disable();
 		virtual ~Renderbuf();
@@ -124,9 +124,13 @@ namespace st
 		}
 	}
 
-	void Renderbuf::init(int aRenderTextureDimension)
+	void Renderbuf::init(int aRenderTextureDimensionX, int aRenderTextureDimensionY)
 	{
-		mRenderTextureDimension = aRenderTextureDimension;
+		mRenderTextureDimensionX = aRenderTextureDimensionX;
+		if (aRenderTextureDimensionY == -1)
+			mRenderTextureDimensionY = aRenderTextureDimensionX;
+		else
+			mRenderTextureDimensionY = aRenderTextureDimensionY;
 
 		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &mPrevFB); RENDERBUF_H_CHECK_GL_ERROR
 			
@@ -136,10 +140,10 @@ namespace st
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); RENDERBUF_H_CHECK_GL_ERROR
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); RENDERBUF_H_CHECK_GL_ERROR
 
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); RENDERBUF_H_CHECK_GL_ERROR//GL_CLAMP_TO_BORDER);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); RENDERBUF_H_CHECK_GL_ERROR// GL_CLAMP_TO_BORDER);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); RENDERBUF_H_CHECK_GL_ERROR
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); RENDERBUF_H_CHECK_GL_ERROR
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, aRenderTextureDimension, aRenderTextureDimension, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0); RENDERBUF_H_CHECK_GL_ERROR
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mRenderTextureDimensionX, mRenderTextureDimensionY, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0); RENDERBUF_H_CHECK_GL_ERROR
 
 		glGenFramebuffers(1, &mRenderFBO); RENDERBUF_H_CHECK_GL_ERROR
 		glBindFramebuffer(GL_FRAMEBUFFER, mRenderFBO); RENDERBUF_H_CHECK_GL_ERROR
@@ -148,7 +152,7 @@ namespace st
 
 		glGenRenderbuffers(1, &mRenderRB); RENDERBUF_H_CHECK_GL_ERROR
 		glBindRenderbuffer(GL_RENDERBUFFER, mRenderRB); RENDERBUF_H_CHECK_GL_ERROR
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, aRenderTextureDimension, aRenderTextureDimension); RENDERBUF_H_CHECK_GL_ERROR
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mRenderTextureDimensionX, mRenderTextureDimensionY); RENDERBUF_H_CHECK_GL_ERROR
 
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER); RENDERBUF_H_CHECK_GL_ERROR
 		
@@ -162,7 +166,7 @@ namespace st
 		glGetIntegerv(GL_VIEWPORT, &mPrevViewport[0]); RENDERBUF_H_CHECK_GL_ERROR
 		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &mPrevFB); RENDERBUF_H_CHECK_GL_ERROR
 		glBindFramebuffer(GL_FRAMEBUFFER, mRenderFBO); RENDERBUF_H_CHECK_GL_ERROR
-		glViewport(0, 0, mRenderTextureDimension, mRenderTextureDimension); RENDERBUF_H_CHECK_GL_ERROR
+		glViewport(0, 0, mRenderTextureDimensionX, mRenderTextureDimensionY); RENDERBUF_H_CHECK_GL_ERROR
 	}
 
 	void Renderbuf::disable()

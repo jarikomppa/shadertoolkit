@@ -19,6 +19,7 @@
 #include "../st_generate_cube.h"
 #include "../st_generate_sphere.h"
 #include "../st_generate_torusknot.h"
+#include "../st_generate_sprites.h"
 
 using namespace st;
 
@@ -153,8 +154,9 @@ void process_events()
 Vertexbuffer *cube;
 Vertexbuffer *sphere;
 Vertexbuffer *torusknot;
-Shader tex, shadowpass, floory, knot;
-GLuint glosstex, mosaictex, thegridtex;
+Vertexbuffer *sprites;
+Shader tex, shadowpass, floory, knot, sprite;
+GLuint glosstex, mosaictex, thegridtex, spritetex;
 Renderbuf mirror;
 Shadowmap shadowmap;
 
@@ -165,6 +167,8 @@ void init()
 	glosstex = loadtexture("assets/gloss.png");
 	mosaictex = loadtexture("assets/mosaic.png");
 	thegridtex = loadtexture("assets/thegrid.png");
+	spritetex = loadtexture("assets/sprite.png");
+	sprites = generate_sprites(100);
 	sphere = generate_sphere(200, 7);
 	cube = generate_cube(150, 2, 150);
 	torusknot = generate_torusknot(256, 7, 20, 0.1f, 0, 0, 0, 1, 64, 3, 5);
@@ -172,11 +176,35 @@ void init()
 	knot.load("assets/knot.vs", "assets/knot.fs");
 	shadowpass.load("assets/shadowpass.vs", "assets/shadowpass.fs");
 	floory.load("assets/floory.vs", "assets/floory.fs");
+	sprite.load("assets/sprite.vs", "assets/sprite.fs");
+
+	float *wp = sprites->getAttribArrayPtr(2);
+	float *sd = sprites->getAttribArrayPtr(3);
+	int i;
+	for (i = 0; i < 100; i++)
+	{
+		wp[i * 4 + 0] = sin(i * M_PI * 2 / 100) * 100;
+		wp[i * 4 + 1] = sin(i * M_PI * 2 * 6 / 100) * 8 + 16;
+		wp[i * 4 + 2] = cos(i * M_PI * 2 / 100) * 100;
+		wp[i * 4 + 3] = 0;
+
+		sd[i * 4 + 0] = 4;
+		sd[i * 4 + 1] = 4;
+		sd[i * 4 + 2] = 0;
+		sd[i * 4 + 3] = 0.75;
+	}
+
 }
 
 void draw_screen()
 {
 	int tick = SDL_GetTicks();
+	glm::mat4 reflect = glm::mat4(
+		1, 0, 0, 0,
+		0, -1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	);
 	glm::mat4 lookat = glm::lookAt(
 		glm::vec3(sin(tick * 0.000345)*100.0f, sin(tick * 0.0001) * 20 + 35.0f, cos(tick * 0.000345)*100.0f),
 		glm::vec3(0, 20, 0),
@@ -185,9 +213,13 @@ void draw_screen()
 	glm::mat4 translate_floory = glm::translate(glm::vec3(0, -1, 0));
 	glm::mat4 translate_sphere = glm::translate(glm::vec3(0, 0, 0));
 	glm::mat4 translate_torusknot = glm::translate(glm::vec3(0, 25, 0));
-	glm::mat4 sphere_mvp = proj * translate_sphere * lookat;
-	glm::mat4 torusknot_mvp = proj * translate_torusknot * lookat;
-	glm::mat4 floory_mvp = proj * translate_floory * lookat;
+	glm::mat4 sphere_mvp = proj * lookat * translate_sphere;
+	glm::mat4 torusknot_mvp = proj * lookat * translate_torusknot;
+	glm::mat4 floory_mvp = proj * lookat * translate_floory;
+	glm::mat4 sphere_mvp_m = proj * lookat * reflect * translate_sphere;
+	glm::mat4 torusknot_mvp_m = proj * lookat * reflect * translate_torusknot;
+	glm::mat4 translate_torusknot_m = reflect * translate_torusknot * reflect;
+	glm::mat4 lookat_m = lookat * reflect;
 
 	glm::vec4 lightpos = glm::vec4(sin(tick * 0.0007)*100.0f, sin(tick * 0.0001) * 20 + 35.0f, cos(tick * 0.00075)*100.0f, 1);
 	/////////////////////////
@@ -220,18 +252,9 @@ void draw_screen()
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 		int tick = SDL_GetTicks();
-		glm::mat4 reflect = glm::mat4(
-			1, 0, 0, 0,
-			0, -1, 0, 0,
-			0, 0, 1, 0,
-			0, 0, 0, 1
-		);		
-		glm::mat4 sphere_mvp = reflect * proj * translate_sphere * lookat;
-		glm::mat4 torusknot_mvp = reflect * proj * reflect * translate_torusknot * reflect * lookat * reflect;
-		
 
 		tex.enable();
-		glUniformMatrix4fv(tex.getUniformLocation("mvp"), 1, 0, glm::value_ptr(sphere_mvp));
+		glUniformMatrix4fv(tex.getUniformLocation("mvp"), 1, 0, glm::value_ptr(sphere_mvp_m));
 		glUniform1i(tex.getUniformLocation("tex"), 0);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, thegridtex);
@@ -242,8 +265,8 @@ void draw_screen()
 		tex.disable();
 
 		knot.enable();
-		glUniformMatrix4fv(knot.getUniformLocation("mvp"), 1, 0, glm::value_ptr(torusknot_mvp));
-		glUniformMatrix4fv(knot.getUniformLocation("model"), 1, 0, glm::value_ptr(translate_torusknot));
+		glUniformMatrix4fv(knot.getUniformLocation("mvp"), 1, 0, glm::value_ptr(torusknot_mvp_m));
+		glUniformMatrix4fv(knot.getUniformLocation("model"), 1, 0, glm::value_ptr(translate_torusknot_m));
 		glUniformMatrix4fv(knot.getUniformLocation("shadowmatrix"), 1, 0, glm::value_ptr(shadowmap.mShadowmatrix));
 		glUniform4fv(knot.getUniformLocation("lightpos"), 1, glm::value_ptr(lightpos));
 		glUniform1i(knot.getUniformLocation("tex"), 0);
@@ -252,12 +275,28 @@ void draw_screen()
 		glBindTexture(GL_TEXTURE_2D, mosaictex);
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, shadowmap.mShadowTex);
-		glCullFace(GL_FRONT);
+		glCullFace(GL_BACK);
 		torusknot->enable();
 		torusknot->render();
 		torusknot->disable();
-
 		knot.disable();
+
+		sprite.enable();
+		glUniformMatrix4fv(sprite.getUniformLocation("proj"), 1, 0, glm::value_ptr(proj));
+		glUniformMatrix4fv(sprite.getUniformLocation("view"), 1, 0, glm::value_ptr(lookat_m));
+		glUniform1i(sprite.getUniformLocation("tex"), 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, spritetex);
+		sprites->enable();
+		glEnable(GL_BLEND);
+		glDepthMask(GL_FALSE);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		sprites->render();
+		glDisable(GL_BLEND);
+		glDepthMask(GL_TRUE);
+		sprites->disable();
+		sprite.disable();
+
 	}
 	mirror.disable();
 	/////////////////////////
@@ -319,6 +358,22 @@ void draw_screen()
 	cube->render();
 	cube->disable();
 	floory.disable();
+
+	sprite.enable();
+	glUniformMatrix4fv(sprite.getUniformLocation("proj"), 1, 0, glm::value_ptr(proj));
+	glUniformMatrix4fv(sprite.getUniformLocation("view"), 1, 0, glm::value_ptr(lookat));
+	glUniform1i(sprite.getUniformLocation("tex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, spritetex);
+	sprites->enable();
+	glEnable(GL_BLEND);
+	glDepthMask(GL_FALSE);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	sprites->render();
+	glDisable(GL_BLEND);
+	glDepthMask(GL_TRUE);
+	sprites->disable();
+	sprite.disable();
 
 	SDL_Delay(1);
 	SDL_GL_SwapWindow(gSDLWindow);
